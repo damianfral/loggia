@@ -1,0 +1,140 @@
+*
+{
+  transition          : all 2s ease !important;
+  backface-visibility : hidden;
+  box-sizing          : border-box;
+  z-index             : 0;
+  transform-style     : preserve-3d;
+  background-position : 50% 50%;
+  background-size     : cover;
+}
+
+html, body
+{
+  height           : 100%;
+  width            : 100%;
+  background-color : rgb(155, 142, 127);
+  margin           : 0;
+  padding          : 0;
+  display          : flex;
+  flex-direction   : column;
+}
+
+.album
+{
+  transform        : perspective(1100px) scale(0.8);
+  transform-origin : 50% 50%;
+  position         : relative;
+  width            : 100%;
+  height           : 100%;
+  display          : block;
+  box-shadow       : 0px 8px 32px 0px rgba(81,64,49,0.6);
+  background-color : white;
+}
+
+.hidden
+{
+  display: none !important;
+}
+.album__sheet
+{
+  width    : 100%;
+  height   : 100%;
+  position : absolute;
+  top      : 0;
+  bottom   : 0;
+  left     : 0;
+  right    : 0;
+  display  : block;
+}
+
+.album__sheet--unfolded
+{
+  transform: translateZ(1px);
+}
+.album__page
+{
+  position         : absolute;
+  top              : 0;
+  bottom           : 0;
+  width            : 50%;
+  background-color : white;
+  transform        : rotateY(0);
+  display: flex;
+}
+
+.album__page:nth-child(odd)
+{
+  left             : 0;
+  transform-origin : 100% 50%;
+}
+
+.album__page:nth-child(even)
+{
+  left:50%;
+  transform-origin: 0% 50%;
+}
+
+.left-folded > .album__page:nth-child(odd)
+.album__sheet--unfolded > .album__page,
+.right-folded > .album__page:nth-child(even)
+{
+  transform: rotateY(0deg);
+}
+
+.left-folded > .album__page:nth-child(even)   
+{
+  transform: rotateY(-180deg); 
+}
+
+.right-folded > .album__page:nth-child(odd)
+{
+  transform: rotateY(180deg);
+}
+
+.album__sheet--folded .album__page
+{
+  z-index: 1;
+}
+
+.album__sheet--unfolded .album-page
+{
+  z-index: 2;
+}
+
+.photo-group
+{
+  display: flex;
+}
+
+.controls > button {
+  transition-duration: 0.1s !important;
+  font-family:         monospace;
+  color:               white;
+  font-size:           24px;
+  background-color:    rgba(0,0,0,0);
+  margin:              8px;
+  outline:             none;
+  border:              none;
+}
+
+.controls > button:hover {
+  transform: scale(2);
+}
+
+.controls 
+{
+  font-size:       24px;
+  padding:         8px;
+  display:         flex;
+  margin:          32px;
+  width:           360px;
+  justify-content: space-between;
+  align-items:     center;
+  align-content:   center;
+  align-self:      center;
+  z-index:         100000;
+  transform:       translateZ(1000px);
+  color:           white;
+  font-family:     monospace;
+}

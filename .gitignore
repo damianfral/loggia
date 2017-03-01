@@ -1,0 +1,10 @@
+*~
+,*
+.*.swp
+.*.swo
+result
+result-*
+.cabal-sandbox
+cabal.sandbox.config
+.version-suffix
+
