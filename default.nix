@@ -1,4 +1,4 @@
-{ compiler ? "ghcjs" }:
+{ compiler ? "ghc" }:
 
 let
 
