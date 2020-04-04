@@ -1,6 +1,6 @@
 { mkDerivation, aeson, base, basic-prelude, bytestring, containers
-, directory, fixplate, free, lens, lucid, MonadRandom, mtl, pipes
-, random, semigroups, stdenv, svg-tree, text, transformers, turtle
+, directory, fixplate, lens, lucid, MonadRandom, mtl, pipes, random
+, semigroups, stdenv, svg-tree, text, transformers, turtle
 , unordered-containers
 }:
 mkDerivation {
@@ -9,8 +9,8 @@ mkDerivation {
   src = ./.;
   libraryHaskellDepends = [
     aeson base basic-prelude bytestring containers directory fixplate
-    free lens lucid MonadRandom mtl pipes random semigroups svg-tree
-    text transformers turtle unordered-containers
+    lens lucid MonadRandom mtl pipes random semigroups svg-tree text
+    transformers turtle unordered-containers
   ];
   homepage = "http://github.com/damianfral/loggia";
   description = "A gallery generator";

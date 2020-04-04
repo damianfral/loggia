@@ -36,11 +36,11 @@ import           GHCJS.DOM.Element
 import           GHCJS.DOM.EventM                 as EvM
 import           GHCJS.DOM.File
 import qualified GHCJS.DOM.FileReader             as FR
-import           GHCJS.DOM.HTMLImageElement       (castToHTMLImageElement,
-                                                   getHeight, getWidth, setSrc)
+import           GHCJS.DOM.HTMLImageElement       (getHeight, getWidth, setSrc)
 
 import qualified GHCJS.DOM.HTMLImageElement       as IMG
-import           GHCJS.DOM.Types                  hiding (Event, Text)
+import           GHCJS.DOM.Types                  hiding (Event, Text,
+                                                   fromJSString)
 import           GHCJS.Foreign
 import           GHCJS.Marshal
 import           GHCJS.Types                      as JS
@@ -56,20 +56,23 @@ import qualified Data.List.NonEmpty               as NE
 
 --------------------------------------------------------------------------------
 
+showT :: ( Show s ) => s -> Text
+showT = pack . show
+
 toCalc, toCalcNoUnit, toCalcPx :: (Integral r, Show r) => Ratio r -> Text
 toCalc e  = unwords [ "calc("
-                    , show (100 * numerator e) <> "% /"
-                    , show $ denominator e
+                    , showT (100 * numerator e) <> "% /"
+                    , showT $ denominator e
                     , ")" ]
 
 toCalcNoUnit e = unwords [ "calc("
-                         , show (numerator e) <> " /"
-                         , show $ denominator e
+                         , showT (numerator e) <> " /"
+                         , showT $ denominator e
                          , ")" ]
 
 toCalcPx e  = unwords [ "calc("
-                      , show (numerator e) <> "px /"
-                      , show $ denominator e
+                      , showT (numerator e) <> "px /"
+                      , showT $ denominator e
                       , ")" ]
 
 attrsToCSS :: L.Attrs -> Text
@@ -96,13 +99,13 @@ renderPageNode (att L.:< L.Leaf img) = do
   where
     domAttrs = mconcat
       [ "class" =: "photo-item"
-      , "style" =: ( textToString $  attrsToCSS att <> imageToCSS img) ]
+      , "style" =: (  attrsToCSS att <> imageToCSS img) ]
 
 renderPageNode (att L.:< L.Branch l r) = elAttr "div" domAttrs  $ l >> r
   where
     domAttrs = mconcat
       [ "class" =: "photo-group"
-      , "style" =: ( textToString $ attrsToCSS att ) ]
+      , "style" =: ( attrsToCSS att ) ]
 
 renderPage :: (MonadWidget t m) => AppAction -> L.Page -> m (Event t AppAction)
 renderPage _ L.EmptyPage = elAttr' "div" ("class" =: "album__page") (text "")  >> return never
@@ -121,7 +124,7 @@ renderSheet pointerDyn i (l,r) = do
     return $ lEv <> rEv
   where
     go pointer = mconcat
-      [ "data-pagenumber" =: (textToString $ show i)
+      [ "data-pagenumber" =: showT i
       , "class" =: ( "album__sheet "
             <> case pointer `compare` i of
                  LT -> "album__sheet--folded right-folded "
@@ -216,24 +219,36 @@ fileInputWidget = value <$> fileInput config
 
 getResultString :: FileReader -> IO Text
 getResultString fr = do
-  v <- FR.getResult fr
-  s <- fromJSVal v
-  return $ pack $ fromMaybe "" (fromJSString <$> s)
+  mv <- FR.getResult fr
+  case mv of
+    Nothing -> return ""
+    Just v  -> fromMaybe "" <$> toText v
 
-readDimensions :: MonadWidget t m => L.Image -> m (Event t L.Image)
+ where
+
+
+   toText :: StringOrArrayBuffer -> IO ( Maybe Text )
+   toText v =  ( fromJSVal . unStringOrArrayBuffer $ v)
+
+
+-- readDimensions :: MonadWidget t m => L.Image -> m (Event t L.Image)
 readDimensions (L.ImageF p _ _ x) = do
   Just doc  <- liftIO $ currentDocument
-  Just el   <- liftIO $ createElement doc $ Just ("img"::String)
-  let img   =  castToHTMLImageElement $ el
-  let handler :: (L.Image -> IO ()) -> EventM HTMLImageElement UIEvent ()
-      handler k = liftIO $ k =<< do
-        w    <- getWidth img
-        h    <- getHeight img
+  el   <- liftIO $ createElement doc $ ("img"::String)
+  -- let handler :: (L.Image -> IO ()) -> EventM HTMLImageElement UIEvent ()
+  ( Just img )  <-  castTo HTMLImageElement $ el
+  let handler = do
+        w    <- fromIntegral <$> getWidth img
+        h    <- fromIntegral <$> getHeight img
         print (w,h)
         return $ L.ImageF p w h x
-  eLoad <- buildEvent (EvM.on img load . handler)
+
+  let eLoad = handler <$ domEvent Load el
+
+  eDimensionsReaded <- performEvent eLoad
+
   setSrc img p
-  return eLoad
+  return eDimensionsReaded
 
 -- readImage :: MonadWidget t m => File -> m (Event t L.Image)
 -- readImage file = do
@@ -247,26 +262,34 @@ readDimensions (L.ImageF p _ _ x) = do
 --       go :: MonadWidget t m => Text -> m (Event t L.Image)
 --       go x  = readDimensions $ L.ImageF x 1 1 Nothing
 
-readImage :: MonadWidget t m => File -> m (Event t L.Image)
+readImage :: ( MonadIO m, MonadWidget t m, (PerformEvent t m ) )
+          => File -> m (Event t L.Image)
 readImage file = do
   fileReader <- FR.newFileReader
   Just doc  <- liftIO $ currentDocument
-  Just el   <- liftIO $ createElement doc $ Just ("img"::String)
-  let img   =  castToHTMLImageElement $ el
+  el   <- liftIO $ createElement doc $ ("img"::String)
+  Just img <- castTo HTMLImageElement $ el
   liftIO $ setSrc img (""::String)
-  imgLoadEv <- wrapDomEvent img (`EvM.on` load) $ liftIO $ do
-            putStrLn "Done!"
-            p <- getResultString fileReader
-            w <- getWidth  img
-            h <- getHeight img
-            print (w,h)
-            return $ L.ImageF p w h Nothing
+
+  let readDimensionsAction :: ( MonadIO m ) => m L.Image
+      readDimensionsAction = liftIO $
+        do
+          putStrLn "Done!"
+          p <- getResultString fileReader
+          w <- fromIntegral <$> getWidth  img
+          h <- fromIntegral <$> getHeight img
+          print (w,h)
+          return $ L.ImageF p w h Nothing
+
+  let imgLoadEv :: (MonadWidget t m, PerformEvent t m ) => Event t ( m L.Image )
+      imgLoadEv = readDimensionsAction <$ domEvent Change el
 
   let f =
         do
           liftIO $ getResultString fileReader >>= setSrc img
-          return imgLoadEv
+          performEvent $ _ imgLoadEv
 
+  -- evB <- wrapDomEvent fileReader (`EvM.on` FR.load) $ f
   evB <- wrapDomEvent fileReader (`EvM.on` FR.load) $ f
 
   liftIO $ FR.readAsDataURL fileReader ( Just $ toBlob file )
@@ -284,7 +307,7 @@ readImages imgs = do
 
 askPostEvent :: MonadWidget t m => m (EventTrigger t a -> a -> IO ())
 askPostEvent = do
-  postGui <- RDom.askPostGui
+  postGui <- askPostGui
   runWithActions <- askRunWithActions
   return (\t a -> postGui $ runWithActions [t :=> Identity a])
 

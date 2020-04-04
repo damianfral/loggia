@@ -35,9 +35,9 @@ library
 
   -- other-modules:
   -- other-extensions:
-  build-depends:        base >=4.8 && <5, basic-prelude, aeson, bytestring, 
+  build-depends:        base >=4.8 && <5, basic-prelude, aeson, bytestring,
                         containers, unordered-containers, lens, fixplate, mtl,
-                        transformers, text, semigroups, free,
+                        transformers, text, semigroups,
                         pipes, random, svg-tree >= 0.5, lucid,
                         turtle, directory, MonadRandom
 
