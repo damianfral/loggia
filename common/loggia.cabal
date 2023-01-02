@@ -35,11 +35,11 @@ library
 
   -- other-modules:
   -- other-extensions:
-  build-depends:        base >=4.8 && <5, basic-prelude, aeson, bytestring,
+  build-depends:        base, basic-prelude, aeson, bytestring,
                         containers, unordered-containers, lens, fixplate, mtl,
                         transformers, text, semigroups,
-                        pipes, random, svg-tree >= 0.5, lucid,
-                        turtle, directory, MonadRandom
+                        pipes, random, svg-tree, lucid,
+                        turtle, directory, MonadRandom, servant
 
   ghc-options:          -Wall -O2 -auto-all -fprof-auto -caf-all -threaded
   ghcjs-options:        -Wall -O2 -auto-all
