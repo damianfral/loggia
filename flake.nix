@@ -26,11 +26,11 @@
         pkgs = pkgsFor system;
         filteredSrc =
           pkgs.nix-filter {
-            root = ./common;
+            root = ./.;
             include = [
               "src/"
               "test/"
-              "loggia.cabal"
+              "package.yaml"
               "LICENSE"
             ];
           };

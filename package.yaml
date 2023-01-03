@@ -1,0 +1,72 @@
+---
+name: loggia
+version: 1.0.0.0
+
+license: MIT
+license-file: LICENSE
+
+dependencies:
+  - aeson
+  - base
+  - basic-prelude
+  - bytestring
+  - containers
+  - directory
+  - fixplate
+  - github
+  - lens
+  - lucid
+  - MonadRandom
+  - mtl
+  - optparse-applicative
+  - optparse-generic
+  - relude
+  - semigroups
+  - servant
+  - svg-tree
+  - text
+  - transformers
+  - turtle
+  - unordered-containers
+  - vector
+  - vector-algorithms
+
+library:
+  source-dirs: ./src/
+
+executables:
+  loggia:
+    main: Main.hs
+    source-dirs: ./src/
+    dependencies:
+      - free
+      - pipes
+      - random
+      - filepath
+      - servant-server
+      - wai
+      - wai-extra
+      - warp
+
+    ghc-options:
+      - -rtsopts
+      - -threaded
+      - -with-rtsopts=-N
+      - -Wall
+      - -O2
+
+# tests:
+#   github-ls-test:
+#     main: Spec.hs
+#     source-dirs: test
+#     ghc-options:
+#       - -threaded
+#     dependencies:
+#       - genvalidity
+#       - genvalidity-sydtest
+#       - genvalidity-text
+#       - github-ls
+#       - QuickCheck
+#       - sydtest
+#       - sydtest-discover
+#       - validity
